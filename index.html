@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- connect-src 'none' means the page cannot send data anywhere: your file never leaves the browser. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; worker-src blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>CSV Viewer – Open, Sort and Filter CSV Files Online (Free and Private)</title>
+<meta name="description" content="Free online CSV viewer. Open large CSV files in your browser, then sort and filter any column. Your file is processed on your device and is never uploaded.">
+<link rel="canonical" href="https://example.com/">
+<meta name="theme-color" content="#0969da">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="CSV Viewer">
+<meta property="og:title" content="CSV Viewer – sort and filter CSV files in your browser">
+<meta property="og:description" content="Open large CSV files and sort or filter any column. Free, fast and private: your file never leaves your device.">
+<meta property="og:url" content="https://example.com/">
+<meta property="og:image" content="https://example.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="CSV Viewer showing a sortable, filterable table">
+<meta name="twitter:card" content="summary_large_image">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "CSV Viewer",
+  "url": "https://example.com/",
+  "description": "Free online CSV viewer that sorts and filters CSV files in the browser without uploading them.",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "browserRequirements": "Requires a modern web browser with JavaScript",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site">
+  <h1>CSV Viewer</h1>
+  <p class="sub">Open a CSV file to view it as a table you can sort and filter. Your file is processed on your device and is never uploaded.</p>
+</header>
+
+<main>
+  <noscript><p class="error">This tool needs JavaScript. Please enable it and reload the page.</p></noscript>
+
+  <label id="drop" class="drop">
+    <input type="file" id="file" class="sr-only" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values">
+    <span class="drop-title"><strong>Choose a CSV file</strong> or drag and drop it here</span>
+    <span class="drop-hint" id="fileName">Comma, semicolon, tab and pipe separators are detected automatically.</span>
+  </label>
+  <p class="actions"><button type="button" id="sample">Try it with sample data</button></p>
+
+  <div id="loading" class="loading" hidden>
+    <progress id="bar" max="1" value="0" aria-label="Loading progress"></progress>
+    <span id="loadText" aria-live="polite"></span>
+    <button type="button" id="cancel">Cancel</button>
+  </div>
+  <p id="error" class="error" role="alert" hidden></p>
+  <p id="note" class="note" hidden></p>
+
+  <section id="viewer" aria-label="Table" hidden>
+    <div class="toolbar">
+      <input type="search" id="global" placeholder="Search all columns…" aria-label="Search all columns">
+      <label class="check"><input type="checkbox" id="multi"> Sort by several columns</label>
+      <button type="button" id="clear">Clear filters and sort</button>
+      <button type="button" id="export" title="Download the filtered and sorted rows as a CSV file">Export view</button>
+    </div>
+    <div class="pager">
+      <label>Rows per page
+        <select id="pageSize">
+          <option>25</option><option selected>100</option><option>500</option><option>1000</option><option>5000</option>
+        </select>
+      </label>
+      <button type="button" id="prev" aria-label="Previous page">‹ Prev</button>
+      <span id="pageInfo"></span>
+      <button type="button" id="next" aria-label="Next page">Next ›</button>
+    </div>
+    <p class="status" aria-live="polite"><span id="statusText"></span> <span id="busy" class="busy" hidden>Working…</span></p>
+    <div class="wrap">
+      <table id="table">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="hint">Tap or click a column name to sort. Type in the box under a column name to filter. <a href="#filters">Filter help</a></p>
+  </section>
+
+  <article class="content">
+    <h2>How to use it</h2>
+    <ol>
+      <li>Choose a CSV file, or drag one onto the box above.</li>
+      <li>Click a column name to sort: ascending, then descending, then back to the original order. Shift+click, or tick <em>Sort by several columns</em>, to sort by more than one column.</li>
+      <li>Type in the box under a column name to filter it, or use the search box to look across all columns.</li>
+      <li>Use <em>Export view</em> to download just the rows you filtered, in the order you sorted them.</li>
+    </ol>
+
+    <h2 id="filters">Filter syntax</h2>
+    <table class="syntax">
+      <thead><tr><th scope="col">Type this</th><th scope="col">To find</th></tr></thead>
+      <tbody>
+        <tr><td><code>abc</code></td><td>values containing “abc”</td></tr>
+        <tr><td><code>=abc</code></td><td>values exactly equal to “abc”</td></tr>
+        <tr><td><code>!abc</code></td><td>values not containing “abc”</td></tr>
+        <tr><td><code>^abc</code> / <code>abc$</code></td><td>values starting / ending with “abc”</td></tr>
+        <tr><td><code>&gt;10</code> <code>&gt;=10</code> <code>&lt;5</code> <code>&lt;=5</code></td><td>numbers or dates above or below a value (number and date columns)</td></tr>
+        <tr><td><code>=3</code> / <code>!=0</code></td><td>numbers or dates equal / not equal to a value</td></tr>
+        <tr><td><code>10..20</code></td><td>a range, including both ends, e.g. <code>2025-01-01..2025-03-31</code></td></tr>
+        <tr><td><code>(empty)</code> / <code>!(empty)</code></td><td>blank / non-blank cells</td></tr>
+        <tr><td><code>&gt;0 &amp; &lt;100</code></td><td>rows matching every condition</td></tr>
+        <tr><td><code>North | South</code></td><td>rows matching any condition</td></tr>
+      </tbody>
+    </table>
+    <p>Filters ignore upper and lower case. Columns marked <strong>#</strong> hold numbers and columns marked <strong>date</strong> hold dates; they sort by value, not alphabetically. Blank cells always sort last.</p>
+
+    <h2>Is my data private?</h2>
+    <p>Yes. Your file is read and processed entirely inside your browser, on your own device. It is never uploaded, and the page is technically blocked from sending data anywhere. See the <a href="privacy.html">privacy policy</a>.</p>
+
+    <h2>How big a file can it open?</h2>
+    <p>The work happens in the background, so the page stays responsive while large files load. Files of several hundred megabytes usually open on a desktop or laptop; the real limit is your device's memory. Phones and tablets have less memory, so very large files may not open there.</p>
+
+    <h2>Which files work?</h2>
+    <p>Any text file with values separated by commas, semicolons, tabs or pipes, including <code>.csv</code>, <code>.tsv</code> and <code>.txt</code> exports from Excel, Google Sheets, databases and most other software. The first row is used as the column names. Files must be UTF-8 encoded, which is the default for most software today.</p>
+  </article>
+</main>
+
+<footer class="site">
+  <a href="privacy.html">Privacy policy</a>
+</footer>
+
+<script src="worker.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
